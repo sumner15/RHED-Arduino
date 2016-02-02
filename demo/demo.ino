@@ -13,75 +13,68 @@
 
 #include <Servo.h>
 #include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_HMC5883_U.h>
-
-/* Assign a unique ID to this sensor at the same time */
-Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
-/* Initialize an instance of a servo */
-Servo servoOne;  // create servo object to control a servo
+#define address 0x1E  //0011110b, I2C 7bit address of HMC5883
+Servo servoOne;       // index finger servo
 
 /* Global vars go here */
 int servoPos = 0;                     // servo position
+int x,y,z;                            // triple axis data 
 float lastZ = 0;                      // last Z reading from magnetometer
 unsigned long lastReset = 0;          // last reset time
 const long resetThreshold = 1000;     // reset threshold
 
-void displaySensorDetails(void)
-{
-  sensor_t sensor;
-  mag.getSensor(&sensor);
-  Serial.println("HMC5883 Magnetometer"); 
-  Serial.println("------------------------------------");
-  Serial.print  ("Sensor:       "); Serial.println(sensor.name);
-  Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
-  Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
-  Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" uT");
-  Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println(" uT");
-  Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" uT");  
-  Serial.println("------------------------------------");  
-  Serial.println("Servo Attached.");
-  Serial.println("------------------------------------");
-  Serial.println("");
-  delay(500);
+void updateMag(void){
+  //Tell the HMC5883L where to begin reading data
+  Wire.beginTransmission(address);
+  Wire.write(0x03); //select register 3, X MSB register
+  Wire.endTransmission();
+ //Read data from each axis, 2 registers per axis
+  Wire.requestFrom(address, 6);
+  if(6<=Wire.available()){
+    x = Wire.read()<<8;  //X msb
+    x |= Wire.read();    //X lsb
+    z = Wire.read()<<8;  //Z msb
+    z |= Wire.read();    //Z lsb
+    y = Wire.read()<<8;  //Y msb
+    y |= Wire.read();    //Y lsb
+  }
+  //Print out values of each axis
+  Serial.print("X: ");   Serial.print(x);
+  Serial.print("  Y: "); Serial.print(y);
+  Serial.print("  Z: "); Serial.print(z);  
+  Serial.print(" uT ");
 }
 
 void setup(void) 
-{
-  /* Initialize Serial */
-  Serial.begin(9600);  
-  /* Initialise the magnetometer */
-  if(!mag.begin())
-  {   
-    Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
-    while(1);
-  }    
+{ 
   /* Attach the servo */ 
   servoOne.attach(9);
-  /* Print setup specs */
-  displaySensorDetails();
+  
+  //Initialize Serial and I2C communications
+  Serial.begin(9600);
+  Wire.begin();
+  //Put the HMC5883 IC into the correct operating mode
+  Wire.beginTransmission(address);  //open communication with HMC5883
+  Wire.write(0x02);                 //select mode register
+  Wire.write(0x00);                 //continuous measurement mode
+  Wire.endTransmission();
 }
 
 
 void loop(void) 
 {
-  /* Get a new sensor event */   
-  sensors_event_t event; 
-  mag.getEvent(&event);
+  /* Update thes sensor readings*/   
+  updateMag();
 
   /* update servo position */
-  if(abs(event.magnetic.z - lastZ) > 50 && millis()-lastReset > resetThreshold){
+  if(abs(z - lastZ) > 50 && millis()-lastReset > resetThreshold){  
     lastReset = millis();
-    servoPos ^= 90;               
+    servoPos ^= 60;               
   }
-  servoOne.write(servoPos);     
- 
-  /* Display the results (magnetic vector values are in micro-Tesla (uT)) */
-  Serial.print("X: "); Serial.print(event.magnetic.x); Serial.print("  ");
-  Serial.print("Y: "); Serial.print(event.magnetic.y); Serial.print("  ");
-  Serial.print("Z: "); Serial.print(event.magnetic.z); Serial.print("  "); Serial.print("uT ");
-  Serial.print("ServoPos: "); Serial.print(servoPos); Serial.println(" ");
+  Serial.print("ServoPos: "); Serial.print(servoPos+60); Serial.println(" ");
+  servoOne.write(servoPos+60);         
+  delay(250);
 
   /* save last Z value */
-  lastZ = event.magnetic.z;
+  lastZ = z;
 }
