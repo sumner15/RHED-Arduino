@@ -20,6 +20,7 @@ Servo servoOne;       // index finger servo
 int servoPos = 0;                     // servo position
 int x,y,z;                            // triple axis data 
 float lastZ = 0;                      // last Z reading from magnetometer
+const float zThreshold = 200;         // change in Z needed for new position
 unsigned long lastReset = 0;          // last reset time
 const long resetThreshold = 1000;     // reset threshold
 
@@ -67,7 +68,7 @@ void loop(void)
   updateMag();
 
   /* update servo position */
-  if(abs(z - lastZ) > 50 && millis()-lastReset > resetThreshold){  
+  if(abs(z - lastZ) > zThreshold && millis()-lastReset > resetThreshold){  
     lastReset = millis();
     servoPos ^= 60;               
   }
