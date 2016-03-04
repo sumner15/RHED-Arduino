@@ -1,14 +1,8 @@
 /***************************************************************************
   Author: Sumner Norman
   This demonstration code will facilitate the use of the magnetometer as 
-  an input device that controls the output to the servos.
-
-  Designed specifically to work with the Adafruit HMC5883 Breakout
-  http://www.adafruit.com/products/1746
- 
-  *** You will also need to install the Adafruit_Sensor library! ***
-  These displays use I2C to communicate, 2 pins are required to interface.
-
+  an input device that controls the output to the servos for the Robotic
+  Hand Extension Device (RHED). 
  ***************************************************************************/
 
 #include <Servo.h>
@@ -20,8 +14,8 @@ Servo servoOne;       // index finger servo
 int servoPos = 0;                     // servo position
 int x,y,z;                            // triple axis data 
 float lastZ = 0;                      // last Z reading from magnetometer
-const float zThreshold = 200;         // change in Z needed for new position
 unsigned long lastReset = 0;          // last reset time
+const float zThreshold = 200;         // change in Z needed for new position
 const long resetThreshold = 1000;     // reset threshold
 
 void updateMag(void){
@@ -59,6 +53,8 @@ void setup(void)
   Wire.write(0x02);                 //select mode register
   Wire.write(0x00);                 //continuous measurement mode
   Wire.endTransmission();
+
+  Serial.println(" hello world ");
 }
 
 
