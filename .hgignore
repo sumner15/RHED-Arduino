@@ -1,0 +1,5 @@
+syntax: regexp
+Adafruit_HMC5883_U/*
+Adafruit_Sensor/*
+syntax: glob
+magnetometer_tutorial.pdf
