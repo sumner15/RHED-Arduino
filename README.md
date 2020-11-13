@@ -9,7 +9,7 @@ Developed at UC Irvine, developed in the biorobotics laboratory (PI David J. Rei
 * Quentin Sanders (qsanders@uci.edu)
 * Wesley Tang (tangwesley@hotmail.com)
 
-* default repo location: https://bitbucket.org/biorobotics/rhed-arduino/
+* default repo location: https://github.com/sumner15/RHED-Arduino
 
 ### accessing model ###
 * Arduino IDE can be found here: https://www.arduino.cc/en/Main/Software
